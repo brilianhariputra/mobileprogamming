@@ -1,21 +1,6 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class AppColors {
-  static const navy = Color(0xFF0F172A);
-  static const primary = Color(0xFF1E3A8A);
-  static const accent = Color(0xFF2563EB);
-  static const accentSoft = Color(0xFFEFF6FF);
-  static const accentBorder = Color(0xFFBFDBFE);
-  static const surface = Color(0xFFF8FAFC);
-  static const border = Color(0xFFE2E8F0);
-  static const textDark = Color(0xFF0F172A);
-  static const textMuted = Color(0xFF64748B);
-  static const success = Color(0xFF16A34A);
-}
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -23,458 +8,297 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Form Registrasi',
       debugShowCheckedModeBanner: false,
-      title: 'Tugas Kartu Profil - Brilian Hariputra',
       theme: ThemeData(
+        colorSchemeSeed: Colors.indigo,
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.accent,
-          brightness: Brightness.light,
-        ),
       ),
-      home: const ProfileCardScreen(),
+      home: const RegistrationPage(),
     );
   }
 }
 
-class ProfileCardScreen extends StatelessWidget {
-  const ProfileCardScreen({super.key});
+class RegistrationPage extends StatefulWidget {
+  const RegistrationPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [AppColors.navy, AppColors.primary],
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 760),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.25),
-                      blurRadius: 40,
-                      offset: const Offset(0, 20),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildHeaderBanner(),
-                    const SizedBox(height: 58),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildNameSection(),
-                          const SizedBox(height: 20),
-                          _buildInfoTiles(),
-                          const SizedBox(height: 28),
-                          const Divider(height: 1, color: AppColors.border),
-                          const SizedBox(height: 28),
-                          _buildBody(),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+  State<RegistrationPage> createState() => _RegistrationPageState();
+}
+
+class _RegistrationPageState extends State<RegistrationPage> {
+  final _formKey = GlobalKey<FormState>();
+
+  final _namaController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  final _namaFocus = FocusNode();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+
+  final List<String> _programStudi = [
+    'Sistem Informasi',
+    'Teknik Informatika',
+    'Teknik Elektro',
+    'Manajemen',
+    'Akuntansi',
+  ];
+
+  String? _gender;
+  String? _selectedProdi;
+  bool _agree = false;
+  bool _genderError = false;
+  bool _obscurePassword = true;
+
+  @override
+  void dispose() {
+    _namaController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _namaFocus.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
+    super.dispose();
   }
 
-  // ---------- HEADER ----------
+  void _onSubmit() {
+    final formValid = _formKey.currentState!.validate();
 
-  Widget _buildHeaderBanner() {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          child: Container(
-            height: 130,
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppColors.accent, AppColors.primary],
-              ),
-            ),
-            child: Stack(
-              children: [
-                Positioned(
-                  top: -40,
-                  right: -20,
-                  child: _decorCircle(160, 0.08),
-                ),
-                Positioned(
-                  bottom: -60,
-                  right: 120,
-                  child: _decorCircle(130, 0.06),
-                ),
-              ],
-            ),
-          ),
+    setState(() => _genderError = _gender == null);
+
+    if (!_agree) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Kamu harus menyetujui Syarat & Ketentuan terlebih dahulu.'),
+          backgroundColor: Colors.orange,
         ),
-        Positioned(
-          left: 32,
-          bottom: -50,
-          child: _buildAvatar(),
-        ),
-      ],
-    );
+      );
+    }
+
+    if (!formValid || _gender == null || !_agree) return;
+
+    _showConfirmationDialog();
   }
 
-  Widget _decorCircle(double size, double alpha) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white.withValues(alpha: alpha),
-      ),
-    );
-  }
-
-  Widget _buildAvatar() {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: const CircleAvatar(
-        radius: 48,
-        backgroundColor: AppColors.primary,
-        child: Text(
-          'BH',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ---------- NAMA & STATUS ----------
-
-  Widget _buildNameSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Wrap(
-          spacing: 12,
-          runSpacing: 8,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            const Text(
-              'Brilian Hariputra',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textDark,
-                letterSpacing: -0.5,
-              ),
-            ),
-            _buildStatusBadge(),
-          ],
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'Mahasiswa Sistem Informasi  •  Mobile Developer (Flutter)',
-          style: TextStyle(
-            fontSize: 14,
-            color: AppColors.textMuted,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatusBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.success.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
-      ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.circle, size: 8, color: AppColors.success),
-          SizedBox(width: 6),
-          Text(
-            'Available',
-            style: TextStyle(
-              color: AppColors.success,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ---------- INFO AKADEMIK ----------
-
-  Widget _buildInfoTiles() {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-        _buildInfoTile(Icons.badge_outlined, 'NIM', '4124015'),
-        _buildInfoTile(Icons.school_outlined, 'Semester', '5'),
-        _buildInfoTile(
-          Icons.account_balance_outlined,
-          'Program Studi',
-          'Sistem Informasi',
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInfoTile(IconData icon, String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 20, color: AppColors.accent),
-          const SizedBox(width: 10),
-          Column(
+  void _showConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Konfirmasi Data'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: AppColors.textMuted,
-                ),
-              ),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textDark,
-                ),
-              ),
+              Text('Nama: ${_namaController.text}'),
+              const SizedBox(height: 4),
+              Text('Email: ${_emailController.text}'),
+              const SizedBox(height: 4),
+              Text('Password: ${'*' * _passwordController.text.length}'),
+              const SizedBox(height: 4),
+              Text('Jenis Kelamin: $_gender'),
+              const SizedBox(height: 4),
+              Text('Program Studi: $_selectedProdi'),
+              const SizedBox(height: 12),
+              const Text('Apakah data di atas sudah benar?'),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  // ---------- ISI (TENTANG, SKILLS, KONTAK) ----------
-
-  Widget _buildBody() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final left = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle('Tentang Saya'),
-            const SizedBox(height: 12),
-            const Text(
-              'Mahasiswa Sistem Informasi Semester 5 yang sedang menempuh mata kuliah Mobile Programming. Fokus mempelajari dasar-dasar komponen widget, manajemen layouting, dan pembuatan UI yang responsif menggunakan framework Flutter.',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textMuted,
-                height: 1.6,
-              ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Batal'),
             ),
-            const SizedBox(height: 24),
-            _buildSectionTitle('Keahlian'),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _buildSkillChip(Icons.description_outlined, 'Word'),
-                _buildSkillChip(Icons.table_chart_outlined, 'Excel'),
-                _buildSkillChip(
-                  Icons.admin_panel_settings_outlined,
-                  'Administrator',
-                ),
-              ],
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _submit();
+              },
+              child: const Text('Kirim'),
             ),
           ],
         );
-
-        final right = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle('Kontak'),
-            const SizedBox(height: 12),
-            _buildContactTile(
-              Icons.email_outlined,
-              'Email',
-              'brilian.hariputra@email.com',
-            ),
-            const SizedBox(height: 10),
-            _buildContactTile(
-              Icons.code,
-              'GitHub',
-              'https://github.com',
-            ),
-          ],
-        );
-
-        if (constraints.maxWidth > 560) {
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(flex: 3, child: left),
-              const SizedBox(width: 32),
-              Expanded(flex: 2, child: right),
-            ],
-          );
-        } else {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              left,
-              const SizedBox(height: 28),
-              right,
-            ],
-          );
-        }
       },
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Row(
-      children: [
-        Container(
-          width: 4,
-          height: 18,
-          decoration: BoxDecoration(
-            color: AppColors.accent,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textDark,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSkillChip(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.accentSoft,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.accentBorder),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: AppColors.primary),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.primary,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+  void _submit() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Registrasi berhasil!'),
+        backgroundColor: Colors.green,
       ),
     );
+    _resetForm();
   }
 
-  Widget _buildContactTile(IconData icon, String label, String value) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppColors.accentSoft,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 18, color: AppColors.accent),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
+  void _resetForm() {
+    _formKey.currentState!.reset();
+    _namaController.clear();
+    _emailController.clear();
+    _passwordController.clear();
+    setState(() {
+      _gender = null;
+      _selectedProdi = null;
+      _agree = false;
+      _genderError = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Form Registrasi')),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textMuted,
+                TextFormField(
+                  controller: _namaController,
+                  focusNode: _namaFocus,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Nama Lengkap',
+                    prefixIcon: Icon(Icons.person),
+                    border: OutlineInputBorder(),
                   ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Nama tidak boleh kosong';
+                    }
+                    return null;
+                  },
+                  onFieldSubmitted: (_) =>
+                      FocusScope.of(context).requestFocus(_emailFocus),
                 ),
-                Text(
-                  value,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textDark,
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _emailController,
+                  focusNode: _emailFocus,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Email tidak boleh kosong';
+                    }
+                    if (!value.contains('@')) {
+                      return 'Email harus mengandung "@"';
+                    }
+                    return null;
+                  },
+                  onFieldSubmitted: (_) =>
+                      FocusScope.of(context).requestFocus(_passwordFocus),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _passwordController,
+                  focusNode: _passwordFocus,
+                  obscureText: _obscurePassword,
+                  textInputAction: TextInputAction.done,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: const Icon(Icons.lock),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Password tidak boleh kosong';
+                    }
+                    if (value.length < 6) {
+                      return 'Password minimal 6 karakter';
+                    }
+                    return null;
+                  },
+                  onFieldSubmitted: (_) => _passwordFocus.unfocus(),
+                ),
+                const SizedBox(height: 20),
+                Text('Jenis Kelamin',
+                    style: Theme.of(context).textTheme.titleSmall),
+                RadioListTile<String>(
+                  title: const Text('Laki-laki'),
+                  value: 'Laki-laki',
+                  groupValue: _gender,
+                  contentPadding: EdgeInsets.zero,
+                  onChanged: (v) => setState(() {
+                    _gender = v;
+                    _genderError = false;
+                  }),
+                ),
+                RadioListTile<String>(
+                  title: const Text('Perempuan'),
+                  value: 'Perempuan',
+                  groupValue: _gender,
+                  contentPadding: EdgeInsets.zero,
+                  onChanged: (v) => setState(() {
+                    _gender = v;
+                    _genderError = false;
+                  }),
+                ),
+                if (_genderError)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4, bottom: 4),
+                    child: Text(
+                      'Pilih jenis kelamin',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(
+                    labelText: 'Program Studi',
+                    prefixIcon: Icon(Icons.school),
+                    border: OutlineInputBorder(),
+                  ),
+                  items: _programStudi
+                      .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+                      .toList(),
+                  onChanged: (v) => setState(() => _selectedProdi = v),
+                  validator: (value) =>
+                  value == null ? 'Pilih program studi' : null,
+                ),
+                const SizedBox(height: 12),
+                CheckboxListTile(
+                  title: const Text('Saya setuju dengan Syarat & Ketentuan'),
+                  value: _agree,
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  onChanged: (v) => setState(() => _agree = v ?? false),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: _onSubmit,
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      child: Text('Daftar'),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
