@@ -1,6 +1,12 @@
 # tugas_6
 
-A new Flutter project.
+## Identitas Mahasiswa
+- **Nama:** Brilian Hariputra
+- **NIM:** 4124015
+- **Mata Kuliah:** Mobile Programming
+- **Semester:** 5
+
+---
 
 ## Getting Started
 
